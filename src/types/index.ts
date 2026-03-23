@@ -14,23 +14,53 @@ export interface Tenant {
   created_at: string;
 }
 
+export type EventStatus = 'draft' | 'published' | 'closed' | 'cancelled' | 'finalized'
+
+export interface EventStatusOption {
+  value: EventStatus
+  label: string
+}
+
 export interface Event {
-  id: string;
-  name: string;
-  slug: string;
-  short_description: string;
-  long_description?: string;
-  event_type: 'presencial' | 'virtual' | 'hibrido';
-  start_datetime: string;
-  end_datetime: string;
-  timezone: string;
-  location?: string;
-  virtual_url?: string;
-  max_capacity?: number;
-  cover_image?: string;
-  status: 'borrador' | 'publicado' | 'cerrado' | 'cancelado' | 'finalizado';
-  created_at: string;
-  updated_at: string;
+  id: string
+  title: string
+  slug: string
+  description: string
+  status: EventStatus
+  is_virtual: boolean
+  location: string
+  location_url: string
+  start_date: string
+  end_date: string
+  max_capacity: number | null
+  registration_count: number
+  spots_remaining: number | null
+  is_open_for_registration: boolean
+  cover_image_url: string | null
+  organizer: number
+  organizer_name: string
+  valid_transitions: EventStatusOption[]
+  created_at: string
+  updated_at: string
+  published_at: string | null
+}
+
+export interface EventCreatePayload {
+  title: string
+  description?: string
+  is_virtual: boolean
+  location?: string
+  location_url?: string
+  start_date: string
+  end_date: string
+  max_capacity?: number | null
+}
+
+export interface PaginatedResponse<T> {
+  count: number
+  next: string | null
+  previous: string | null
+  results: T[]
 }
 
 export interface Registration {
