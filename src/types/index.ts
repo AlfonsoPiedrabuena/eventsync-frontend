@@ -63,18 +63,37 @@ export interface PaginatedResponse<T> {
   results: T[]
 }
 
+export type RegistrationStatus = 'confirmed' | 'waitlisted' | 'cancelled'
+
 export interface Registration {
-  id: string;
-  event_id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  position?: string;
-  status: 'confirmado' | 'cancelado' | 'en_espera';
-  checked_in: boolean;
-  checked_in_at?: string;
-  qr_token: string;
-  created_at: string;
+  id: string
+  event: string
+  full_name: string
+  first_name: string
+  last_name: string
+  email: string
+  phone: string
+  company: string
+  position: string
+  status: RegistrationStatus
+  checked_in: boolean
+  checked_in_at: string | null
+  qr_token: string
+  created_at: string
+  updated_at: string
+}
+
+export interface RegistrationCreatePayload {
+  event_id: string
+  first_name: string
+  last_name: string
+  email: string
+  phone?: string
+  company?: string
+  position?: string
+}
+
+export interface RegistrationListResponse {
+  count: number
+  results: Registration[]
 }
