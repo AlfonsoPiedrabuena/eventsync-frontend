@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Pencil, Trash2, ChevronRight, Users } from 'lucide-react'
+import { ArrowLeft, Pencil, Trash2, ChevronRight, Users, QrCode } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -106,7 +106,7 @@ export default function EventDetailPage() {
                 <DialogHeader>
                   <DialogTitle>Eliminar evento</DialogTitle>
                   <DialogDescription>
-                    ¿Seguro que deseas eliminar "{event.title}"? Esta acción no se puede deshacer.
+                    ¿Seguro que deseas eliminar &ldquo;{event.title}&rdquo;? Esta acción no se puede deshacer.
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
@@ -210,12 +210,22 @@ export default function EventDetailPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle>Registros</CardTitle>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href={`/events/${id}/registrations`}>
-                  <Users className="h-4 w-4 mr-1" />
-                  Ver todos
-                </Link>
-              </Button>
+              <div className="flex items-center gap-1">
+                {event.status === 'published' && (
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href={`/events/${id}/checkin`}>
+                      <QrCode className="h-4 w-4 mr-1" />
+                      Check-in
+                    </Link>
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href={`/events/${id}/registrations`}>
+                    <Users className="h-4 w-4 mr-1" />
+                    Ver todos
+                  </Link>
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="text-3xl font-bold">{event.registration_count}</div>

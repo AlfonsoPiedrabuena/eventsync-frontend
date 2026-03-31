@@ -97,3 +97,31 @@ export interface RegistrationListResponse {
   count: number
   results: Registration[]
 }
+
+// ── Check-in (E4) ────────────────────────────────────────────────────────────
+
+export interface CheckinRegistration {
+  id: string
+  full_name: string
+  first_name: string
+  last_name: string
+  email: string
+  company: string
+  position: string
+  status: RegistrationStatus
+  checked_in: boolean
+  checked_in_at: string | null
+}
+
+export interface CheckinResponse {
+  registration: CheckinRegistration
+  already_checked_in: boolean
+}
+
+export interface EventStats {
+  confirmed: number
+  checked_in: number
+  pending: number
+  waitlisted: number
+  cancelled: number
+}
