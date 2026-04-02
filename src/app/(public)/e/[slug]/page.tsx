@@ -30,16 +30,11 @@ const registrationSchema = z.object({
 })
 type RegistrationForm = z.infer<typeof registrationSchema>
 
-// ---------- Fetch event by slug (public, no auth) ----------
-async function fetchEventBySlug(slug: string): Promise<Event> {
-  // Public endpoint — hit the API without auth token
-  const res = await apiClient.get<{ results: Event[] }>('/events/', {
-    params: { slug },
-    headers: { Authorization: undefined },
-  })
-  const event = res.data.results?.[0]
-  if (!event) throw new Error('Evento no encontrado')
-  return event
+// ---------- Fetch event by slug-uuid (public, no auth) ----------
+// URL format: "{slug}-{event_uuid}", e.g. "mi-evento-22a30481-1ba5-4d69-91d1-338aa663bc3c"
+async function fetchEventBySlug(slugWithId: string): Promise<Event> {
+  const res = await apiClient.get<Event>(`/events/public/${slugWithId}/`)
+  return res.data
 }
 
 export default function PublicEventPage() {

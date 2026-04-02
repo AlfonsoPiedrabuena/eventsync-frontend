@@ -125,3 +125,30 @@ export interface EventStats {
   waitlisted: number
   cancelled: number
 }
+
+// ── Communications (E5) ───────────────────────────────────────────────────────
+
+export type EmailType = 'confirmation' | 'reminder_24h' | 'reminder_1h' | 'post_event' | 'manual'
+export type EmailStatus = 'sent' | 'failed'
+
+export interface EmailLog {
+  id: string
+  email_type: EmailType
+  email_type_display: string
+  recipient_email: string
+  recipient_name: string
+  subject: string
+  status: EmailStatus
+  status_display: string
+  error_message: string
+  sent_at: string | null
+  created_at: string
+}
+
+export type EmailSegment = 'all' | 'confirmed' | 'waitlisted' | 'checked_in' | 'no_show'
+
+export interface ManualSendPayload {
+  subject: string
+  message: string
+  segment: EmailSegment
+}

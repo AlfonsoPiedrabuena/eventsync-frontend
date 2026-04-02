@@ -47,7 +47,7 @@ function LoginForm() {
       login({ access, refresh }, user)
       toast.success(`Bienvenido, ${user.first_name}!`)
       const redirect = searchParams.get('redirect') || '/dashboard'
-      router.push(redirect)
+      window.location.href = redirect
     } catch (err: any) {
       const message =
         err.response?.data?.detail ||

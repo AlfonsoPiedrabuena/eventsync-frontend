@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Pencil, Trash2, ChevronRight, Users, QrCode } from 'lucide-react'
+import { ArrowLeft, Pencil, Trash2, ChevronRight, Users, QrCode, Mail, Link2, Copy, Check } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -24,6 +24,7 @@ export default function EventDetailPage() {
   const router = useRouter()
   const id = params.id as string
   const [isEditing, setIsEditing] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const { data: event, isLoading, isError } = useEvent(id)
   const updateEvent = useUpdateEvent(id)
@@ -48,6 +49,16 @@ export default function EventDetailPage() {
         </Button>
       </div>
     )
+  }
+
+  const publicUrl = event
+    ? `${window.location.origin}/e/${event.slug}-${event.id}`
+    : ''
+
+  const copyPublicUrl = async () => {
+    await navigator.clipboard.writeText(publicUrl)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   const handleUpdate = async (data: EventCreatePayload) => {
@@ -144,6 +155,27 @@ export default function EventDetailPage() {
         </div>
       </div>
 
+      {/* Public link */}
+      {event.status === 'published' && (
+        <div className="flex items-center gap-2 rounded-lg border bg-muted/40 px-4 py-2.5 text-sm">
+          <Link2 className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <a
+            href={publicUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 truncate text-primary hover:underline font-mono text-xs"
+          >
+            {publicUrl}
+          </a>
+          <Button variant="ghost" size="sm" className="shrink-0 h-7 px-2" onClick={copyPublicUrl}>
+            {copied
+              ? <><Check className="h-3.5 w-3.5 mr-1 text-green-600" /><span className="text-green-600">Copiado</span></>
+              : <><Copy className="h-3.5 w-3.5 mr-1" />Copiar</>
+            }
+          </Button>
+        </div>
+      )}
+
       {/* Edit form */}
       {isEditing && (
         <Card>
@@ -208,24 +240,8 @@ export default function EventDetailPage() {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="pb-2">
               <CardTitle>Registros</CardTitle>
-              <div className="flex items-center gap-1">
-                {event.status === 'published' && (
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link href={`/events/${id}/checkin`}>
-                      <QrCode className="h-4 w-4 mr-1" />
-                      Check-in
-                    </Link>
-                  </Button>
-                )}
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href={`/events/${id}/registrations`}>
-                    <Users className="h-4 w-4 mr-1" />
-                    Ver todos
-                  </Link>
-                </Button>
-              </div>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="text-3xl font-bold">{event.registration_count}</div>
@@ -250,6 +266,34 @@ export default function EventDetailPage() {
                   </div>
                 </>
               )}
+
+              <Separator />
+
+              {/* Navigation actions */}
+              <div className="flex flex-col gap-1 pt-1">
+                <Button variant="ghost" size="sm" className="justify-start w-full" asChild>
+                  <Link href={`/events/${id}/registrations`}>
+                    <Users className="h-4 w-4 mr-2" />
+                    Ver registros
+                  </Link>
+                </Button>
+                {event.status === 'published' && (
+                  <Button variant="ghost" size="sm" className="justify-start w-full" asChild>
+                    <Link href={`/events/${id}/checkin`}>
+                      <QrCode className="h-4 w-4 mr-2" />
+                      Check-in
+                    </Link>
+                  </Button>
+                )}
+                {(event.status === 'published' || event.status === 'closed' || event.status === 'finalized') && (
+                  <Button variant="ghost" size="sm" className="justify-start w-full" asChild>
+                    <Link href={`/events/${id}/communications`}>
+                      <Mail className="h-4 w-4 mr-2" />
+                      Emails
+                    </Link>
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
