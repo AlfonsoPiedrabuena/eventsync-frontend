@@ -152,3 +152,51 @@ export interface ManualSendPayload {
   message: string
   segment: EmailSegment
 }
+
+// ── Analytics (E6) ────────────────────────────────────────────────────────────
+
+export interface EventSummary {
+  event_id: string
+  event_title: string
+  status: EventStatus
+  confirmed: number
+  waitlisted: number
+  cancelled: number
+  checked_in: number
+  no_show: number
+  check_in_rate: number
+  max_capacity: number | null
+  capacity_utilization: number | null
+  emails_sent: number
+  emails_failed: number
+}
+
+export interface RegistrationsTimeline {
+  labels: string[]
+  daily: number[]
+  cumulative: number[]
+}
+
+export interface UpcomingEvent {
+  id: string
+  title: string
+  start_date: string
+  confirmed: number
+  max_capacity: number | null
+}
+
+export interface TopEvent {
+  id: string
+  title: string
+  status: EventStatus
+  confirmed: number
+}
+
+export interface TenantDashboard {
+  total_events: number
+  events_by_status: Partial<Record<EventStatus, number>>
+  total_registrations: number
+  total_checked_in: number
+  upcoming_events: UpcomingEvent[]
+  top_events: TopEvent[]
+}

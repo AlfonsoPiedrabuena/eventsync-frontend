@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Pencil, Trash2, ChevronRight, Users, QrCode, Mail, Link2, Copy, Check } from 'lucide-react'
+import { ArrowLeft, Pencil, Trash2, ChevronRight, Users, QrCode, Mail, Link2, Copy, Check, BarChart2 } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -275,6 +275,12 @@ export default function EventDetailPage() {
                   <Link href={`/events/${id}/registrations`}>
                     <Users className="h-4 w-4 mr-2" />
                     Ver registros
+                  </Link>
+                </Button>
+                <Button variant="ghost" size="sm" className="justify-start w-full" asChild>
+                  <Link href={`/events/${id}/analytics`}>
+                    <BarChart2 className="h-4 w-4 mr-2" />
+                    Analytics
                   </Link>
                 </Button>
                 {event.status === 'published' && (

@@ -1,25 +1,26 @@
 'use client'
 
+import Link from 'next/link'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { Calendar, Users, CheckSquare, TrendingUp, Plus, ArrowRight, BarChart2 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Calendar, Users, CheckSquare, TrendingUp, Plus, ArrowRight } from 'lucide-react'
-import Link from 'next/link'
+import { Separator } from '@/components/ui/separator'
+import { EventStatusBadge } from '@/components/events/EventStatusBadge'
+import { useTenantDashboard } from '@/hooks/useAnalytics'
+import type { EventStatus } from '@/types'
 
-// Stat card component for the overview metrics
 function StatCard({
-  title,
-  value,
-  description,
-  icon: Icon,
-  trend,
+  title, value, description, icon: Icon, loading = false,
 }: {
   title: string
   value: string | number
   description: string
   icon: React.ElementType
-  trend?: string
+  loading?: boolean
 }) {
   return (
     <Card>
@@ -28,32 +29,40 @@ function StatCard({
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        {loading
+          ? <div className="h-8 w-16 rounded bg-muted animate-pulse" />
+          : <div className="text-2xl font-bold">{value}</div>
+        }
         <p className="text-xs text-muted-foreground mt-1">{description}</p>
-        {trend && (
-          <Badge variant="secondary" className="mt-2 text-xs">
-            {trend}
-          </Badge>
-        )}
       </CardContent>
     </Card>
   )
 }
 
+const STATUS_LABELS: Partial<Record<EventStatus, string>> = {
+  draft:     'Borrador',
+  published: 'Publicados',
+  closed:    'Cerrados',
+  cancelled: 'Cancelados',
+  finalized: 'Finalizados',
+}
+
 export default function DashboardPage() {
   const { user } = useAuth()
+  const { data, isLoading } = useTenantDashboard()
+
+  const publishedCount = data?.events_by_status?.published ?? 0
+  const checkInRate = data && data.total_registrations > 0
+    ? Math.round((data.total_checked_in / data.total_registrations) * 100)
+    : 0
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">
-            Hola, {user?.first_name} 👋
-          </h1>
-          <p className="text-muted-foreground">
-            Aquí tienes un resumen de tu actividad
-          </p>
+          <h1 className="text-2xl font-bold">Hola, {user?.first_name}</h1>
+          <p className="text-muted-foreground">Resumen general de tu organización</p>
         </div>
         <Button asChild>
           <Link href="/events/new">
@@ -63,94 +72,172 @@ export default function DashboardPage() {
         </Button>
       </div>
 
-      {/* Stats Overview */}
+      {/* KPI cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title="Eventos activos"
-          value="—"
-          description="Próximos 30 días"
+          title="Total eventos"
+          value={data?.total_events ?? 0}
+          description={`${publishedCount} publicados actualmente`}
           icon={Calendar}
-          trend="Sprint 3-4"
+          loading={isLoading}
         />
         <StatCard
-          title="Total asistentes"
-          value="—"
-          description="Registros confirmados"
+          title="Registros confirmados"
+          value={data?.total_registrations ?? 0}
+          description="En todos tus eventos"
           icon={Users}
-          trend="Sprint 5-6"
+          loading={isLoading}
         />
         <StatCard
-          title="Check-ins hoy"
-          value="—"
+          title="Total check-ins"
+          value={data?.total_checked_in ?? 0}
           description="Asistentes verificados"
           icon={CheckSquare}
-          trend="Sprint 7-8"
+          loading={isLoading}
         />
         <StatCard
           title="Tasa de asistencia"
-          value="—"
-          description="Promedio de tus eventos"
+          value={`${checkInRate}%`}
+          description="Check-in vs confirmados"
           icon={TrendingUp}
-          trend="Sprint 11-12"
+          loading={isLoading}
         />
       </div>
 
-      {/* Quick Actions + Recent Activity */}
-      <div className="grid gap-4 md:grid-cols-2">
+      {/* Status breakdown */}
+      {data && Object.keys(data.events_by_status).length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle>Acciones rápidas</CardTitle>
-            <CardDescription>Lo más común que necesitas hacer</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {[
-              { href: '/events/new', label: 'Crear evento', icon: Calendar },
-              { href: '/settings/team', label: 'Invitar miembro del equipo', icon: Users },
-            ].map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                className="flex items-center justify-between rounded-md border p-3 hover:bg-accent transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <Icon className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">{label}</span>
-                </div>
-                <ArrowRight className="h-4 w-4 text-muted-foreground" />
-              </Link>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Próximos sprints</CardTitle>
-            <CardDescription>Funcionalidades en desarrollo</CardDescription>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Eventos por estado</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {[
-                { sprint: 'S3-4', feature: 'Gestión de Eventos', status: 'Próximo' },
-                { sprint: 'S5-6', feature: 'Registro de Asistentes', status: 'Planificado' },
-                { sprint: 'S7-8', feature: 'Check-in por QR', status: 'Planificado' },
-                { sprint: 'S9-10', feature: 'Comunicaciones (Email)', status: 'Planificado' },
-              ].map(({ sprint, feature, status }) => (
-                <div key={sprint} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs font-mono">
-                      {sprint}
-                    </Badge>
-                    <span className="text-sm">{feature}</span>
-                  </div>
-                  <Badge variant={status === 'Próximo' ? 'default' : 'secondary'} className="text-xs">
-                    {status}
-                  </Badge>
+            <div className="flex flex-wrap gap-3">
+              {(Object.entries(data.events_by_status) as [EventStatus, number][]).map(([status, count]) => (
+                <div key={status} className="flex items-center gap-2">
+                  <EventStatusBadge status={status} />
+                  <span className="text-sm font-medium">{count}</span>
+                  <span className="text-xs text-muted-foreground">{STATUS_LABELS[status] ?? status}</span>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
+      )}
+
+      <div className="grid gap-4 md:grid-cols-2">
+
+        {/* Upcoming events */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Próximos eventos</CardTitle>
+            <CardDescription>Eventos publicados con fecha futura</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-2">
+                {[1,2,3].map(i => <div key={i} className="h-10 rounded bg-muted animate-pulse" />)}
+              </div>
+            ) : (data?.upcoming_events?.length ?? 0) === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                No hay eventos publicados próximos.
+              </p>
+            ) : (
+              <div className="space-y-1">
+                {data!.upcoming_events.map(ev => (
+                  <Link
+                    key={ev.id}
+                    href={`/events/${ev.id}`}
+                    className="flex items-center justify-between rounded-md p-2 hover:bg-accent transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{ev.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(ev.start_date), "d MMM yyyy", { locale: es })}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                      <span className="text-xs text-muted-foreground">
+                        {ev.confirmed}{ev.max_capacity ? `/${ev.max_capacity}` : ''} reg.
+                      </span>
+                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Top events */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Top eventos</CardTitle>
+            <CardDescription>Por número de registros confirmados</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-2">
+                {[1,2,3].map(i => <div key={i} className="h-10 rounded bg-muted animate-pulse" />)}
+              </div>
+            ) : (data?.top_events?.length ?? 0) === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                Sin datos aún.
+              </p>
+            ) : (
+              <div className="space-y-1">
+                {data!.top_events.map((ev, idx) => (
+                  <Link
+                    key={ev.id}
+                    href={`/events/${ev.id}/analytics`}
+                    className="flex items-center gap-3 rounded-md p-2 hover:bg-accent transition-colors"
+                  >
+                    <span className="text-sm font-mono text-muted-foreground w-5 text-right">{idx + 1}.</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{ev.title}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <EventStatusBadge status={ev.status} />
+                      <span className="text-sm font-medium">{ev.confirmed}</span>
+                      <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
       </div>
+
+      {/* Quick actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Acciones rápidas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/events/new">
+                <Plus className="h-4 w-4 mr-1" />
+                Crear evento
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/events">
+                <Calendar className="h-4 w-4 mr-1" />
+                Ver todos los eventos
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/settings/team">
+                <Users className="h-4 w-4 mr-1" />
+                Invitar miembro
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
     </div>
   )
 }
