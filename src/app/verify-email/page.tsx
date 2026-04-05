@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react'
@@ -15,6 +15,7 @@ function VerifyEmailContent() {
   const router = useRouter()
   const [status, setStatus] = useState<Status>('loading')
   const [message, setMessage] = useState('')
+  const hasVerified = useRef(false)
 
   const token = searchParams.get('token')
 
@@ -25,6 +26,10 @@ function VerifyEmailContent() {
       return
     }
 
+    // Guard against React StrictMode double-invocation
+    if (hasVerified.current) return
+    hasVerified.current = true
+
     authApi
       .verifyEmail(token)
       .then(() => {
@@ -32,7 +37,7 @@ function VerifyEmailContent() {
         setMessage('Tu email ha sido verificado. Ya puedes iniciar sesión.')
       })
       .catch((err) => {
-        const detail = err.response?.data?.detail || 'El token es inválido o ha expirado.'
+        const detail = err.response?.data?.error || err.response?.data?.detail || 'El token es inválido o ha expirado.'
         setStatus('error')
         setMessage(detail)
       })
