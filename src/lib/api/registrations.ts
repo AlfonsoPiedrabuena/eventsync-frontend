@@ -14,6 +14,12 @@ export const registrationsApi = {
   cancel: (id: string) =>
     apiClient.post<Registration>(`/registrations/${id}/cancel/`).then(r => r.data),
 
+  cancelByToken: (token: string) =>
+    apiClient.post<{ status: 'cancelled' | 'already_cancelled'; event_title?: string }>(
+      '/registrations/cancel/',
+      { token }
+    ).then(r => r.data),
+
   exportCsvUrl: (eventId: string) =>
     `${process.env.NEXT_PUBLIC_API_URL}/api/registrations/?event=${eventId}&export=csv`,
 }

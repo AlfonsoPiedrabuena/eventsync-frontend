@@ -21,15 +21,20 @@ export interface EventStatusOption {
   label: string
 }
 
+export type EventModality = 'in_person' | 'virtual' | 'hybrid'
+
 export interface Event {
   id: string
   title: string
   slug: string
   description: string
   status: EventStatus
-  is_virtual: boolean
+  modality: EventModality
+  is_virtual: boolean  // derived from modality, kept for backward compat
   location: string
   location_url: string
+  virtual_access_url: string | null
+  hero_image_url: string | null
   start_date: string
   end_date: string
   max_capacity: number | null
@@ -48,9 +53,11 @@ export interface Event {
 export interface EventCreatePayload {
   title: string
   description?: string
-  is_virtual: boolean
+  modality: EventModality
   location?: string
   location_url?: string
+  virtual_access_url?: string
+  hero_image_url?: string
   start_date: string
   end_date: string
   max_capacity?: number | null

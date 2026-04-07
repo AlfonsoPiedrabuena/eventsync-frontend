@@ -6,9 +6,11 @@ import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Calendar, MapPin, Globe, Users, CheckCircle } from 'lucide-react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input'
+import 'react-phone-number-input/style.css'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,7 +26,12 @@ const registrationSchema = z.object({
   first_name: z.string().min(1, 'Requerido'),
   last_name: z.string().min(1, 'Requerido'),
   email: z.string().email('Email inválido'),
-  phone: z.string().optional(),
+  phone: z
+    .string()
+    .optional()
+    .refine((val) => !val || isValidPhoneNumber(val), {
+      message: 'Número de teléfono inválido',
+    }),
   company: z.string().optional(),
   position: z.string().optional(),
 })
@@ -50,6 +57,7 @@ export default function PublicEventPage() {
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
     setError,
@@ -89,6 +97,18 @@ export default function PublicEventPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12 space-y-8">
+      {/* Hero image */}
+      {event.hero_image_url ? (
+        <img
+          src={event.hero_image_url}
+          alt={event.title}
+          className="w-full aspect-video object-cover rounded-xl"
+          loading="lazy"
+        />
+      ) : (
+        <div className="w-full aspect-video rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-600" />
+      )}
+
       {/* Event info */}
       <div className="space-y-3">
         <p className="text-sm text-primary font-medium uppercase tracking-wide">
@@ -106,15 +126,28 @@ export default function PublicEventPage() {
             {' — '}
             {format(new Date(event.end_date), "HH:mm")}
           </span>
-          {event.is_virtual ? (
-            <span className="flex items-center gap-2">
-              <Globe className="h-4 w-4 shrink-0" />
-              Evento virtual
-            </span>
-          ) : (
+          {event.modality === 'in_person' ? (
             <span className="flex items-center gap-2">
               <MapPin className="h-4 w-4 shrink-0" />
               {event.location}
+            </span>
+          ) : event.modality === 'hybrid' ? (
+            <>
+              {event.location && (
+                <span className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 shrink-0" />
+                  {event.location}
+                </span>
+              )}
+              <span className="flex items-center gap-2">
+                <Globe className="h-4 w-4 shrink-0" />
+                Evento híbrido
+              </span>
+            </>
+          ) : (
+            <span className="flex items-center gap-2">
+              <Globe className="h-4 w-4 shrink-0" />
+              Evento virtual
             </span>
           )}
           {event.max_capacity !== null && (
@@ -146,9 +179,24 @@ export default function PublicEventPage() {
             </h2>
             <p className="text-muted-foreground text-sm">
               {registrationStatus === 'confirmed'
-                ? 'Te hemos registrado exitosamente. Recibirás más información pronto.'
+                ? 'Te hemos registrado exitosamente. Recibirás un correo de confirmación con tu QR de acceso.'
                 : 'El evento está lleno. Te notificaremos si se libera un lugar.'}
             </p>
+            {registrationStatus === 'confirmed' &&
+              event.modality !== 'in_person' &&
+              event.virtual_access_url && (
+                <div className="pt-2">
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Link de acceso al evento:</p>
+                  <a
+                    href={event.virtual_access_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary underline underline-offset-2 break-all"
+                  >
+                    {event.virtual_access_url}
+                  </a>
+                </div>
+              )}
           </CardContent>
         </Card>
       ) : (
@@ -185,7 +233,25 @@ export default function PublicEventPage() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="phone">Teléfono</Label>
-                <Input id="phone" type="tel" {...register('phone')} placeholder="+52 55 1234 5678" />
+                <Controller
+                  name="phone"
+                  control={control}
+                  render={({ field }) => (
+                    <PhoneInput
+                      id="phone"
+                      international
+                      defaultCountry="MX"
+                      withCountryCallingCode
+                      autoComplete="tel"
+                      aria-label="Número de teléfono"
+                      placeholder="+52 55 1234 5678"
+                      value={field.value}
+                      onChange={field.onChange}
+                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-within:outline-none focus-within:ring-1 focus-within:ring-ring [&_input]:border-0 [&_input]:bg-transparent [&_input]:outline-none [&_input]:w-full"
+                    />
+                  )}
+                />
+                {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
               </div>
 
               <div className="grid grid-cols-2 gap-4">

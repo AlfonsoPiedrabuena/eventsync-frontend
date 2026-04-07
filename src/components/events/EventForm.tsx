@@ -1,14 +1,17 @@
 'use client'
 
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { ImageIcon, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select } from '@/components/ui/select'
 import { Alert } from '@/components/ui/alert'
+import { useHeroImageUpload } from '@/hooks/useHeroImageUpload'
 import type { Event, EventCreatePayload } from '@/types'
 
 // ---------- Validation schema ----------
@@ -16,15 +19,16 @@ const eventSchema = z
   .object({
     title: z.string().min(3, 'El título debe tener al menos 3 caracteres'),
     description: z.string().optional(),
-    is_virtual: z.boolean(),
+    modality: z.enum(['in_person', 'virtual', 'hybrid']),
     location: z.string().optional(),
     location_url: z.string().url('URL inválida').optional().or(z.literal('')),
+    virtual_access_url: z.string().url('URL inválida').optional().or(z.literal('')),
     start_date: z.string().min(1, 'La fecha de inicio es requerida'),
     end_date: z.string().min(1, 'La fecha de fin es requerida'),
     max_capacity: z.coerce.number().int().positive().optional().nullable(),
   })
   .refine(
-    (data) => data.is_virtual || !!data.location,
+    (data) => data.modality !== 'in_person' || !!data.location,
     { message: 'Los eventos presenciales deben tener una ubicación', path: ['location'] }
   )
   .refine(
@@ -46,7 +50,6 @@ interface EventFormProps {
 // ---------- Helper: ISO string → datetime-local input value ----------
 function toDatetimeLocal(iso?: string | null): string {
   if (!iso) return ''
-  // slice to 'YYYY-MM-DDTHH:mm'
   return iso.slice(0, 16)
 }
 
@@ -58,6 +61,10 @@ export function EventForm({
   error,
   submitLabel = 'Guardar evento',
 }: EventFormProps) {
+  const [heroPreview, setHeroPreview] = useState<string | null>(defaultValues?.hero_image_url ?? null)
+  const [heroUrl, setHeroUrl] = useState<string | null>(defaultValues?.hero_image_url ?? null)
+  const { upload, uploading, progress, error: uploadError } = useHeroImageUpload(defaultValues?.id)
+
   const {
     register,
     handleSubmit,
@@ -68,25 +75,42 @@ export function EventForm({
     defaultValues: {
       title: defaultValues?.title ?? '',
       description: defaultValues?.description ?? '',
-      is_virtual: defaultValues?.is_virtual ?? false,
+      modality: (defaultValues?.modality as EventFormValues['modality']) ?? 'in_person',
       location: defaultValues?.location ?? '',
       location_url: defaultValues?.location_url ?? '',
+      virtual_access_url: defaultValues?.virtual_access_url ?? '',
       start_date: toDatetimeLocal(defaultValues?.start_date),
       end_date: toDatetimeLocal(defaultValues?.end_date),
       max_capacity: defaultValues?.max_capacity ?? null,
     },
   })
 
-  const isVirtual = watch('is_virtual')
+  const modality = watch('modality')
+  const isPresencial = modality === 'in_person'
+  const hasVirtual = modality === 'virtual' || modality === 'hybrid'
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    // Immediate local preview
+    setHeroPreview(URL.createObjectURL(file))
+    try {
+      const url = await upload(file)
+      setHeroUrl(url)
+    } catch {
+      setHeroPreview(heroUrl) // revert to last saved URL on error
+    }
+  }
 
   const handleFormSubmit = async (values: EventFormValues) => {
     await onSubmit({
       title: values.title,
       description: values.description,
-      is_virtual: values.is_virtual,
+      modality: values.modality,
       location: values.location,
       location_url: values.location_url,
-      // Convert datetime-local string to ISO with timezone offset
+      virtual_access_url: values.virtual_access_url || undefined,
+      hero_image_url: heroUrl || undefined,
       start_date: new Date(values.start_date).toISOString(),
       end_date: new Date(values.end_date).toISOString(),
       max_capacity: values.max_capacity ?? null,
@@ -133,27 +157,39 @@ export function EventForm({
         </div>
       </div>
 
-      {/* Event type */}
+      {/* Modality */}
       <div className="space-y-1.5">
-        <Label htmlFor="is_virtual">Modalidad *</Label>
-        <Select id="is_virtual" {...register('is_virtual', { setValueAs: v => v === 'true' })}>
-          <option value="false">Presencial</option>
-          <option value="true">Virtual</option>
+        <Label htmlFor="modality">Modalidad *</Label>
+        <Select id="modality" {...register('modality')}>
+          <option value="in_person">Presencial</option>
+          <option value="virtual">Virtual</option>
+          <option value="hybrid">Híbrido</option>
         </Select>
       </div>
 
-      {/* Location / URL */}
-      {!isVirtual ? (
+      {/* Location (presencial or hybrid) */}
+      {(isPresencial || modality === 'hybrid') && (
         <div className="space-y-1.5">
-          <Label htmlFor="location">Ubicación *</Label>
+          <Label htmlFor="location">
+            Ubicación {isPresencial ? '*' : ''}
+          </Label>
           <Input id="location" {...register('location')} placeholder="Ej. Centro de Convenciones, CDMX" />
           {errors.location && <p className="text-xs text-destructive">{errors.location.message}</p>}
         </div>
-      ) : (
+      )}
+
+      {/* Virtual access URL (virtual or hybrid) */}
+      {hasVirtual && (
         <div className="space-y-1.5">
-          <Label htmlFor="location_url">URL del evento virtual</Label>
-          <Input id="location_url" {...register('location_url')} placeholder="https://meet.google.com/..." />
-          {errors.location_url && <p className="text-xs text-destructive">{errors.location_url.message}</p>}
+          <Label htmlFor="virtual_access_url">Link de acceso virtual</Label>
+          <Input
+            id="virtual_access_url"
+            {...register('virtual_access_url')}
+            placeholder="https://meet.google.com/..."
+          />
+          {errors.virtual_access_url && (
+            <p className="text-xs text-destructive">{errors.virtual_access_url.message}</p>
+          )}
         </div>
       )}
 
@@ -170,7 +206,45 @@ export function EventForm({
         {errors.max_capacity && <p className="text-xs text-destructive">{errors.max_capacity.message}</p>}
       </div>
 
-      <Button type="submit" disabled={isLoading} className="w-full">
+      {/* Hero image */}
+      <div className="space-y-1.5">
+        <Label>Imagen de portada</Label>
+        {heroPreview ? (
+          <div className="relative">
+            <img
+              src={heroPreview}
+              alt="Vista previa de portada"
+              className="w-full aspect-video object-cover rounded-md border"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 bg-background/80 hover:bg-background"
+              onClick={() => { setHeroPreview(null); setHeroUrl(null) }}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <label className="flex flex-col items-center justify-center w-full aspect-video rounded-md border-2 border-dashed border-input bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors">
+            <ImageIcon className="h-8 w-8 text-muted-foreground mb-2" />
+            <span className="text-sm text-muted-foreground">PNG, JPG o WebP · máx. 5MB</span>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="hidden"
+              onChange={handleImageChange}
+            />
+          </label>
+        )}
+        {uploading && (
+          <p className="text-xs text-muted-foreground">Subiendo imagen… {progress}%</p>
+        )}
+        {uploadError && <p className="text-xs text-destructive">{uploadError}</p>}
+      </div>
+
+      <Button type="submit" disabled={isLoading || uploading} className="w-full">
         {isLoading ? 'Guardando...' : submitLabel}
       </Button>
     </form>
