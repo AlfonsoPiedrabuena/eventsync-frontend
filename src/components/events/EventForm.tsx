@@ -26,6 +26,9 @@ const eventSchema = z
     start_date: z.string().min(1, 'La fecha de inicio es requerida'),
     end_date: z.string().min(1, 'La fecha de fin es requerida'),
     max_capacity: z.coerce.number().int().positive().optional().nullable(),
+    visibility: z.enum(['public', 'private']).default('public'),
+    audience_type: z.enum(['internal', 'external']).nullable().optional(),
+    target_company: z.string().max(200).optional(),
   })
   .refine(
     (data) => data.modality !== 'in_person' || !!data.location,
@@ -34,6 +37,14 @@ const eventSchema = z
   .refine(
     (data) => !data.start_date || !data.end_date || data.start_date < data.end_date,
     { message: 'La fecha de fin debe ser posterior a la de inicio', path: ['end_date'] }
+  )
+  .refine(
+    (data) => data.visibility !== 'private' || !!data.audience_type,
+    { message: 'Un evento privado debe ser interno o externo', path: ['audience_type'] }
+  )
+  .refine(
+    (data) => !(data.visibility === 'private' && data.audience_type === 'external') || !!data.target_company,
+    { message: 'Un evento privado externo debe indicar la empresa destinataria', path: ['target_company'] }
   )
 
 type EventFormValues = z.infer<typeof eventSchema>
@@ -82,10 +93,15 @@ export function EventForm({
       start_date: toDatetimeLocal(defaultValues?.start_date),
       end_date: toDatetimeLocal(defaultValues?.end_date),
       max_capacity: defaultValues?.max_capacity ?? null,
+      visibility: (defaultValues?.visibility as EventFormValues['visibility']) ?? 'public',
+      audience_type: (defaultValues?.audience_type as EventFormValues['audience_type']) ?? null,
+      target_company: defaultValues?.target_company ?? '',
     },
   })
 
   const modality = watch('modality')
+  const visibility = watch('visibility')
+  const audienceType = watch('audience_type')
   const isPresencial = modality === 'in_person'
   const hasVirtual = modality === 'virtual' || modality === 'hybrid'
 
@@ -114,6 +130,11 @@ export function EventForm({
       start_date: new Date(values.start_date).toISOString(),
       end_date: new Date(values.end_date).toISOString(),
       max_capacity: values.max_capacity ?? null,
+      visibility: values.visibility,
+      audience_type: values.visibility === 'private' ? values.audience_type : null,
+      target_company: values.visibility === 'private' && values.audience_type === 'external'
+        ? values.target_company
+        : undefined,
     })
   }
 
@@ -166,6 +187,42 @@ export function EventForm({
           <option value="hybrid">Híbrido</option>
         </Select>
       </div>
+
+      {/* Visibility */}
+      <div className="space-y-1.5">
+        <Label htmlFor="visibility">Visibilidad *</Label>
+        <Select id="visibility" {...register('visibility')}>
+          <option value="public">Público — visible para todos</option>
+          <option value="private">Privado — solo por invitación</option>
+        </Select>
+        {errors.visibility && <p className="text-xs text-destructive">{errors.visibility.message}</p>}
+      </div>
+
+      {/* Audience type (private only) */}
+      {visibility === 'private' && (
+        <div className="space-y-1.5">
+          <Label htmlFor="audience_type">Tipo de audiencia *</Label>
+          <Select id="audience_type" {...register('audience_type')}>
+            <option value="">Seleccionar...</option>
+            <option value="internal">Interno — empleados</option>
+            <option value="external">Externo — clientes / prospectos</option>
+          </Select>
+          {errors.audience_type && <p className="text-xs text-destructive">{errors.audience_type.message}</p>}
+        </div>
+      )}
+
+      {/* Target company (private + external only) */}
+      {visibility === 'private' && audienceType === 'external' && (
+        <div className="space-y-1.5">
+          <Label htmlFor="target_company">Empresa destinataria *</Label>
+          <Input
+            id="target_company"
+            {...register('target_company')}
+            placeholder="Ej. ACME Corporation"
+          />
+          {errors.target_company && <p className="text-xs text-destructive">{errors.target_company.message}</p>}
+        </div>
+      )}
 
       {/* Location (presencial or hybrid) */}
       {(isPresencial || modality === 'hybrid') && (

@@ -94,9 +94,14 @@ export default function EventDetailPage() {
             </Link>
           </Button>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-2xl font-bold">{event.title}</h1>
               <EventStatusBadge status={event.status} />
+              {event.visibility === 'private' && (
+                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-amber-50 text-amber-700 border-amber-200">
+                  Privado{event.audience_type === 'internal' ? ' · Interno' : event.audience_type === 'external' ? ` · ${event.target_company || 'Externo'}` : ''}
+                </span>
+              )}
             </div>
             <p className="text-sm text-muted-foreground">
               Creado el {format(new Date(event.created_at), "d MMM yyyy", { locale: es })}

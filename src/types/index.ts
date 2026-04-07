@@ -23,6 +23,9 @@ export interface EventStatusOption {
 
 export type EventModality = 'in_person' | 'virtual' | 'hybrid'
 
+export type EventVisibility = 'public' | 'private'
+export type EventAudienceType = 'internal' | 'external'
+
 export interface Event {
   id: string
   title: string
@@ -31,6 +34,9 @@ export interface Event {
   status: EventStatus
   modality: EventModality
   is_virtual: boolean  // derived from modality, kept for backward compat
+  visibility: EventVisibility
+  audience_type: EventAudienceType | null
+  target_company: string
   location: string
   location_url: string
   virtual_access_url: string | null
@@ -58,6 +64,9 @@ export interface EventCreatePayload {
   location_url?: string
   virtual_access_url?: string
   hero_image_url?: string
+  visibility?: EventVisibility
+  audience_type?: EventAudienceType | null
+  target_company?: string
   start_date: string
   end_date: string
   max_capacity?: number | null
