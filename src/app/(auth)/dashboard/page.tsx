@@ -147,7 +147,7 @@ export default function DashboardPage() {
                   <Link
                     key={ev.id}
                     href={`/events/${ev.id}`}
-                    className="flex items-center justify-between rounded-md p-2 hover:bg-accent transition-colors"
+                    className="flex items-center justify-between rounded-md p-2 hover:bg-accent transition-colors w-full overflow-hidden"
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{ev.title}</p>
@@ -189,14 +189,14 @@ export default function DashboardPage() {
                   <Link
                     key={ev.id}
                     href={`/events/${ev.id}/analytics`}
-                    className="flex items-center gap-3 rounded-md p-2 hover:bg-accent transition-colors"
+                    className="flex items-center gap-3 rounded-md p-2 hover:bg-accent transition-colors w-full overflow-hidden"
                   >
                     <span className="text-sm font-mono text-muted-foreground w-5 text-right">{idx + 1}.</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{ev.title}</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <EventStatusBadge status={ev.status} />
+                      <EventStatusBadge status={ev.status} className="hidden sm:inline-flex" />
                       <span className="text-sm font-medium">{ev.confirmed}</span>
                       <Users className="h-3.5 w-3.5 text-muted-foreground" />
                     </div>
