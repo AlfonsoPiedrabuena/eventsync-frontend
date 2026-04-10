@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { Sidebar } from '@/components/layouts/Sidebar'
@@ -10,6 +10,7 @@ import { Loader2 } from 'lucide-react'
 export default function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -31,9 +32,18 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar />
+      {/* Backdrop para móvil — tapa el contenido cuando el sidebar está abierto */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+
       <div className="flex flex-1 flex-col overflow-hidden">
-        <Navbar />
+        <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
         <main className="flex-1 overflow-auto bg-background p-6">{children}</main>
       </div>
     </div>

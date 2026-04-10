@@ -2,9 +2,12 @@
 
 Este archivo proporciona guías técnicas para Claude Code al trabajar en el frontend de EventSync, una plataforma SaaS multi-tenant de gestión integral de eventos.
 
-**Repo**: `eventsync-frontend` (extraído del monorepo `eventsync/` en FEAT-04)
-**URL producción**: `https://app.eventsync.app`
-**Backend companion repo**: `eventsync-backend` → `https://api.eventsync.app`
+**Repo de producción**: `https://github.com/AlfonsoPiedrabuena/eventsync-frontend` → desplegado en Vercel (`https://eventsync.cloud`)
+**Backend companion repo**: `eventsync-backend` → `https://api.eventsync.cloud`
+
+> ⚠️ **IMPORTANTE — Deploy**: Vercel está conectado a `eventsync-frontend`, NO al monorepo `eventsync`.
+> Los cambios en `frontend/` del monorepo **NO se despliegan automáticamente**.
+> Para desplegar a producción, hacer push a `https://github.com/AlfonsoPiedrabuena/eventsync-frontend.git`.
 
 ---
 
@@ -160,10 +163,29 @@ document.cookie = `access_token=${token}; path=/; max-age=900; SameSite=Strict`
 
 ---
 
+## Roles de Usuario y Permisos
+
+El backend maneja 4 roles jerárquicos — el frontend debe respetar las restricciones de UI:
+
+| Rol | Descripción | Acceso frontend |
+|---|---|---|
+| `super_admin` | Staff de Catalysis | Acceso completo (panel admin) |
+| `tenant_admin` | Admin de la organización | Todas las páginas de gestión |
+| `organizer` | Organizador de eventos | Gestión de eventos (no invitations) |
+| `checkin_staff` | Staff de check-in | Solo `/events/[id]/checkin` |
+
+**Jerarquía de permisos en API** (backend `IsCheckInStaffOrAbove`):
+`checkin_staff` < `organizer` < `tenant_admin` < `super_admin`
+
+**URL pública del evento**: formato `{slug}-{event_uuid}` → `/e/[slug]-[event_uuid]`.
+El UUID al final permite lookup cross-tenant por ID sin recorrer slugs.
+
+---
+
 ## Tipos TypeScript (src/types/index.ts)
 
 Tipos implementados:
-- `User`, `Tenant`
+- `User` (incluye campo `role`: `'super_admin' | 'tenant_admin' | 'organizer' | 'checkin_staff'`), `Tenant`
 - `Event`, `EventModality` (in_person/virtual/hybrid), `EventVisibility` (public/private), `EventAudienceType` (internal/external)
 - `Registration`, `RegistrationFormField`
 - `CheckinResponse`, `EventStats`
@@ -218,8 +240,8 @@ useTenantDashboard, useEventSummary, useEventTimeline
 ## Variables de Entorno (.env.local)
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_API_URL=http://localhost:8000   # En producción Vercel: https://api.eventsync.cloud
+NEXT_PUBLIC_APP_URL=http://localhost:3000   # En producción Vercel: https://eventsync.cloud
 
 # Firebase Storage (imágenes hero de eventos)
 NEXT_PUBLIC_FIREBASE_API_KEY=
@@ -268,6 +290,17 @@ useEffect(() => {
 }, [token])
 ```
 
+### Vercel — Variables de entorno en build time
+
+`NEXT_PUBLIC_*` se inyectan **en tiempo de build**, no en runtime. Después de agregar o cambiar una variable en el dashboard de Vercel, es obligatorio hacer **Redeploy** para que tome efecto. Vercel auto-redeploya cuando hay un push a `main`, lo que también aplica las nuevas variables.
+
+**Variables configuradas en Vercel (producción)**:
+- `NEXT_PUBLIC_API_URL=https://api.eventsync.cloud`
+
+### verify-email — token ya consumido
+
+Cuando el token de verificación ya fue usado, el backend retorna error "Token inválido". El frontend muestra el error pero también un botón "Ir al login" porque el usuario puede estar ya verificado. El token se consume en el primer llamado exitoso — no es posible verificar dos veces con el mismo token.
+
 ### Limpiar `.next/` tras agregar dependencias con errores
 
 Si el dev server lanza `Internal Server Error` con `ETIMEDOUT write` tras agregar nuevas dependencias:
@@ -292,6 +325,22 @@ El Axios client (`lib/api/client.ts`) maneja auto-refresh en 401:
 - `lib/firebase.ts`: inicialización de Firebase app
 - Hook `useHeroImageUpload`: progreso de upload, validación de tipo/tamaño, URL de descarga
 - Las URLs se guardan en el backend como `hero_image_url` (string)
+
+### Sidebar responsive — drawer en móvil
+
+El sidebar usa un patrón **slot en desktop / drawer en móvil**:
+
+- **Desktop (`md:`)**: posición relativa en el flujo normal, siempre visible
+- **Móvil**: `fixed inset-y-0 left-0 z-50` con `transition-transform`. Oculto con `-translate-x-full`, visible con `translate-x-0`
+- **Estado**: `isSidebarOpen` vive en `(auth)/layout.tsx` (padre común de `Sidebar` y `Navbar`)
+- **Backdrop**: overlay `fixed inset-0 z-40 bg-black/50` renderizado en el layout cuando el drawer está abierto. `z-40` < `z-50` del sidebar para que quede detrás
+- **Cierre**: botón X dentro del sidebar, clic en el backdrop, o navegación a cualquier link del menú
+
+**Props agregadas**:
+- `Sidebar`: `isOpen: boolean`, `onClose: () => void`
+- `Navbar`: `onMenuClick: () => void` — muestra botón hamburger (`Menu` de lucide) solo en móvil (`md:hidden`)
+
+**Regla**: no usar `display:none` para ocultar el sidebar en móvil — usar `translate` para preservar la animación de entrada/salida.
 
 ---
 
@@ -332,5 +381,5 @@ rm -rf .next
 
 ---
 
-**Última actualización**: 2026-04-07
-**Versión**: 1.0.0 — separado del monorepo en FEAT-04
+**Última actualización**: 2026-04-10
+**Versión**: 1.1.0 — sidebar responsive (drawer en móvil)
