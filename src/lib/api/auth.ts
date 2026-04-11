@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import { User } from '@/types'
+import { User, TeamMember, PaginatedResponse } from '@/types'
 
 export interface LoginData {
   email: string
@@ -65,4 +65,14 @@ export const authApi = {
 
   refreshToken: (refresh: string) =>
     apiClient.post<{ access: string }>('/auth/token/refresh/', { refresh }),
+
+  // Team management (FEAT-07)
+  teamList: () =>
+    apiClient.get<PaginatedResponse<TeamMember>>('/auth/team/'),
+
+  teamUpdate: (userId: string, data: { role?: TeamMember['role']; is_active?: boolean }) =>
+    apiClient.patch<TeamMember>(`/auth/team/${userId}/`, data),
+
+  teamDeactivate: (userId: string) =>
+    apiClient.delete(`/auth/team/${userId}/`),
 }

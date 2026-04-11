@@ -169,6 +169,19 @@ export interface ManualSendPayload {
   segment: EmailSegment
 }
 
+// ── Team (FEAT-07) ────────────────────────────────────────────────────────────
+
+export interface TeamMember {
+  id: string
+  email: string
+  first_name: string
+  last_name: string
+  full_name: string
+  role: 'tenant_admin' | 'organizer' | 'checkin_staff'
+  is_active: boolean
+  date_joined: string // 'YYYY-MM-DD'
+}
+
 // ── Analytics (E6) ────────────────────────────────────────────────────────────
 
 export interface EventSummary {
