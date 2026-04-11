@@ -326,6 +326,39 @@ El Axios client (`lib/api/client.ts`) maneja auto-refresh en 401:
 - Hook `useHeroImageUpload`: progreso de upload, validación de tipo/tamaño, URL de descarga
 - Las URLs se guardan en el backend como `hero_image_url` (string)
 
+### Patrones de layout responsive (móvil)
+
+Reglas recurrentes para evitar overflow en móvil:
+
+**1. Headers con botones de acción**
+
+Cuando un header tiene título a la izquierda y botones a la derecha, en móvil los botones se salen del contenedor. Solución: apilar verticalmente en móvil y volver a fila en `sm:`.
+
+```tsx
+// Contenedor del header
+<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+
+// Grupo de botones (flex-wrap en lugar de shrink-0)
+<div className="flex items-center gap-2 flex-wrap">
+```
+
+**2. Filas flex con texto truncado**
+
+Cuando una fila flex tiene texto con `truncate` + `min-w-0` pero el texto no se trunca en móvil, falta acotar el ancho del contenedor flex padre. Solución: agregar `w-full overflow-hidden` al elemento flex.
+
+```tsx
+<Link className="flex items-center ... w-full overflow-hidden">
+  <div className="min-w-0">
+    <p className="truncate">{title}</p>  {/* ahora sí trunca */}
+  </div>
+  <div className="shrink-0">...</div>
+</Link>
+```
+
+**Regla general**: `truncate` solo funciona si todos sus ancestros flex tienen `min-w-0` y el contenedor raíz tiene un ancho acotado (`w-full` + `overflow-hidden`).
+
+---
+
 ### Sidebar responsive — drawer en móvil
 
 El sidebar usa un patrón **slot en desktop / drawer en móvil**:
