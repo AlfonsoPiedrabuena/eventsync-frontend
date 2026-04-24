@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EventSync — Guía de Usuario</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0d0d0d;
+    --paper: #f5f0e8;
+    --accent: #c8522a;
+    --accent-light: #e8714a;
+    --muted: #6b6456;
+    --rule: #d8cfc0;
+    --highlight: #fff8ee;
+  }
+
+  html { font-size: 16px; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.5;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 60px 48px 80px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    border-top: 3px solid var(--ink);
+    padding-top: 28px;
+    margin-bottom: 48px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .brand-block { display: flex; flex-direction: column; gap: 4px; }
+  .brand-eyebrow {
+    font-size: 0.7rem; font-weight: 500; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .brand-name {
+    font-family: 'Playfair Display', serif; font-size: 2.6rem;
+    font-weight: 900; line-height: 1; letter-spacing: -0.02em;
+  }
+  .brand-name span { color: var(--accent); }
+  .header-meta {
+    text-align: right; font-size: 0.72rem; color: var(--muted);
+    line-height: 1.8; padding-top: 4px;
+  }
+  .header-meta strong {
+    display: block; font-size: 0.8rem; font-weight: 500;
+    color: var(--ink); margin-bottom: 2px;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: var(--ink); color: var(--paper);
+    padding: 40px 44px; margin-bottom: 52px;
+    position: relative; overflow: hidden;
+    animation: fadeUp 0.6s ease 0.1s both;
+  }
+  .hero::before {
+    content: '→';
+    font-family: 'Playfair Display', serif; font-size: 18rem;
+    color: rgba(255,255,255,0.04); position: absolute;
+    top: -60px; right: 20px; line-height: 1; pointer-events: none;
+  }
+  .hero-text {
+    font-family: 'Playfair Display', serif; font-size: 1.55rem;
+    font-weight: 400; line-height: 1.45; max-width: 600px;
+  }
+  .hero-text em { font-style: normal; color: var(--accent-light); }
+  .hero-sub {
+    margin-top: 16px; font-size: 0.82rem;
+    color: rgba(245,240,232,0.55); max-width: 520px;
+  }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    font-size: 0.68rem; font-weight: 500; letter-spacing: 0.22em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 14px;
+  }
+
+  /* ── FLOW OVERVIEW ── */
+  .flow-overview {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 2px; margin-bottom: 52px;
+    animation: fadeUp 0.6s ease 0.2s both;
+  }
+  .flow-node {
+    background: var(--highlight); padding: 20px 18px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .flow-node.active { background: var(--ink); color: var(--paper); }
+  .flow-node-num {
+    font-family: 'Playfair Display', serif; font-size: 1.8rem;
+    font-weight: 900; color: var(--rule); line-height: 1;
+  }
+  .flow-node.active .flow-node-num { color: var(--accent-light); opacity: 0.5; }
+  .flow-node-title { font-size: 0.78rem; font-weight: 500; letter-spacing: 0.04em; line-height: 1.3; }
+  .flow-node.active .flow-node-title { color: var(--paper); }
+
+  /* ── GUIDE SECTION ── */
+  .guide-section { margin-bottom: 52px; animation: fadeUp 0.6s ease 0.25s both; }
+  .guide-section-header {
+    display: flex; align-items: flex-start; gap: 20px;
+    border-top: 3px solid var(--accent); padding-top: 20px; margin-bottom: 28px;
+  }
+  .guide-section-num {
+    font-family: 'Playfair Display', serif; font-size: 3rem;
+    font-weight: 900; color: var(--accent); opacity: 0.25; line-height: 1; flex-shrink: 0;
+  }
+  .guide-section-info { flex: 1; }
+  .guide-section-title {
+    font-family: 'Playfair Display', serif; font-size: 1.35rem;
+    font-weight: 700; margin-bottom: 6px; line-height: 1.2;
+  }
+  .guide-section-desc {
+    font-size: 0.82rem; color: var(--muted); line-height: 1.6; max-width: 560px;
+  }
+
+  /* ── STEPS ── */
+  .steps { display: flex; flex-direction: column; gap: 2px; }
+  .step { display: grid; grid-template-columns: 44px 1fr; gap: 0; }
+  .step-num-col { display: flex; flex-direction: column; align-items: center; }
+  .step-badge {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--ink); color: var(--paper);
+    font-size: 0.7rem; font-weight: 500;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 18px;
+  }
+  .step-line { width: 1px; background: var(--rule); flex: 1; margin-top: 4px; }
+  .step:last-child .step-line { display: none; }
+  .step-body {
+    background: var(--highlight); padding: 18px 22px 18px 16px;
+    margin-left: 4px; margin-bottom: 2px;
+  }
+  .step-action { font-size: 0.88rem; font-weight: 500; color: var(--ink); margin-bottom: 5px; line-height: 1.4; }
+  .step-detail { font-size: 0.78rem; color: var(--muted); line-height: 1.6; }
+  .step-detail strong { color: var(--ink); font-weight: 500; }
+
+  /* ── SCREENSHOT ── */
+  .screenshot-wrap { margin-top: 14px; }
+  .screenshot-img {
+    width: 100%; display: block;
+    border: 1px solid var(--rule);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  }
+  .screenshot-caption {
+    font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); margin-top: 6px; text-align: center; opacity: 0.7;
+  }
+  .screenshot-placeholder {
+    margin-top: 12px; border: 1.5px dashed var(--rule);
+    background: rgba(245,240,232,0.5); display: flex;
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; padding: 28px 20px; color: var(--muted);
+  }
+  .screenshot-placeholder .ph-icon { font-size: 1.5rem; opacity: 0.4; }
+  .screenshot-placeholder .ph-label {
+    font-size: 0.68rem; font-weight: 500; letter-spacing: 0.15em;
+    text-transform: uppercase; opacity: 0.6; text-align: center;
+  }
+
+  /* ── TIP BOX ── */
+  .tip-box {
+    margin-top: 12px; border-left: 3px solid var(--accent);
+    padding: 12px 16px; background: rgba(200, 82, 42, 0.05);
+    font-size: 0.78rem; color: var(--muted); line-height: 1.6;
+  }
+  .tip-box strong { color: var(--accent); font-weight: 500; }
+
+  /* ── FIELD LIST ── */
+  .field-list { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+  .field-row {
+    display: grid; grid-template-columns: 170px 1fr; gap: 8px;
+    font-size: 0.78rem; padding: 7px 0; border-bottom: 1px solid var(--rule);
+  }
+  .field-row:last-child { border-bottom: none; }
+  .field-name { font-weight: 500; color: var(--ink); }
+  .field-desc { color: var(--muted); line-height: 1.5; }
+  .field-required {
+    display: inline-block; font-size: 0.6rem; letter-spacing: 0.1em;
+    text-transform: uppercase; background: var(--accent); color: white;
+    padding: 1px 5px; margin-left: 5px; vertical-align: middle;
+  }
+
+  /* ── SUMMARY BLOCK ── */
+  .summary-block {
+    background: var(--accent); color: white; padding: 36px 44px;
+    display: grid; grid-template-columns: 1fr auto; align-items: center;
+    gap: 24px; animation: fadeUp 0.6s ease 0.5s both; margin-bottom: 44px;
+  }
+  .summary-title {
+    font-family: 'Playfair Display', serif; font-size: 1.35rem;
+    font-weight: 700; line-height: 1.3;
+  }
+  .summary-sub { font-size: 0.8rem; opacity: 0.8; margin-top: 8px; line-height: 1.6; }
+  .summary-checklist { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .summary-item { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; opacity: 0.9; }
+  .check-circle {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.6);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.6rem; flex-shrink: 0;
+  }
+  .summary-side { text-align: right; flex-shrink: 0; }
+  .summary-badge {
+    font-family: 'Playfair Display', serif; font-size: 1.1rem;
+    font-weight: 700; line-height: 1.3;
+  }
+  .summary-badge-label {
+    font-size: 0.68rem; letter-spacing: 0.15em;
+    text-transform: uppercase; opacity: 0.7; margin-bottom: 6px;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.72rem; color: var(--muted);
+    border-top: 1px solid var(--rule); padding-top: 18px;
+    animation: fadeUp 0.6s ease 0.55s both;
+  }
+  .footer-brand {
+    font-family: 'Playfair Display', serif; font-weight: 700;
+    font-size: 0.9rem; color: var(--ink);
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @media print {
+    body::before { display: none; }
+    * { animation: none !important; }
+    .page { padding: 32px; }
+  }
+
+  @media (max-width: 640px) {
+    .page { padding: 28px 20px 48px; }
+    header { grid-template-columns: 1fr; gap: 12px; }
+    .header-meta { text-align: left; }
+    .flow-overview { grid-template-columns: 1fr 1fr; }
+    .step { grid-template-columns: 36px 1fr; }
+    .field-row { grid-template-columns: 1fr; }
+    .summary-block { grid-template-columns: 1fr; }
+    .summary-side { text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand-block">
+      <span class="brand-eyebrow">Guía de Usuario · Primeros pasos</span>
+      <h1 class="brand-name">Event<span>Sync</span></h1>
+    </div>
+    <div class="header-meta">
+      <strong>Catalysis</strong>
+      Versión 1.0 · Abril 2026<br>
+      eventsync.cloud
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <div class="hero">
+    <p class="hero-text">
+      De cero a tu primer evento<br>
+      <em>en menos de 10 minutos.</em>
+    </p>
+    <p class="hero-sub">
+      Esta guía te lleva paso a paso por el proceso completo: registrar tu organización,
+      validar tu cuenta, acceder a la plataforma y publicar tu primer evento.
+    </p>
+  </div>
+
+  <!-- FLOW OVERVIEW -->
+  <div style="margin-bottom: 12px; animation: fadeUp 0.6s ease 0.15s both;">
+    <div class="section-label">El proceso completo</div>
+  </div>
+  <div class="flow-overview">
+    <div class="flow-node active">
+      <div class="flow-node-num">01</div>
+      <div class="flow-node-title">Registrar organización</div>
+    </div>
+    <div class="flow-node">
+      <div class="flow-node-num">02</div>
+      <div class="flow-node-title">Validar correo</div>
+    </div>
+    <div class="flow-node">
+      <div class="flow-node-num">03</div>
+      <div class="flow-node-title">Iniciar sesión</div>
+    </div>
+    <div class="flow-node">
+      <div class="flow-node-num">04</div>
+      <div class="flow-node-title">Crear un evento</div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SECCIÓN 1: REGISTRO -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="guide-section">
+    <div class="guide-section-header">
+      <div class="guide-section-num">01</div>
+      <div class="guide-section-info">
+        <div class="guide-section-title">Registrar tu organización</div>
+        <p class="guide-section-desc">
+          En EventSync, cada cuenta está ligada a una organización — el espacio desde donde
+          administrarás tus eventos y tu equipo. El registro toma menos de dos minutos.
+        </p>
+      </div>
+    </div>
+
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num-col">
+          <div class="step-badge">1</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-action">Ir a eventsync.cloud/register</div>
+          <p class="step-detail">Abre tu navegador y dirígete directamente a <strong>eventsync.cloud/register</strong>. Verás el formulario de <strong>"Registrar organización"</strong> con el subtítulo <em>"Crea tu cuenta de administrador y espacio de trabajo"</em>.</p>
+          <div class="screenshot-wrap">
+            <img src="img/registro-organizacion.png" alt="Formulario de registro de organización" class="screenshot-img">
+            <div class="screenshot-caption">eventsync.cloud/register · Formulario de registro</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num-col">
+          <div class="step-badge">2</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-action">Llena el formulario de registro</div>
+          <p class="step-detail">Completa todos los campos del formulario:</p>
+          <div class="field-list">
+            <div class="field-row">
+              <div class="field-name">Nombre de la organización <span class="field-required">requerido</span></div>
+              <div class="field-desc">El nombre de tu empresa o productora (ej. <em>Mi Empresa S.A.</em>). Aparecerá ante tus asistentes como organizador de los eventos.</div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">Nombre y Apellido <span class="field-required">requerido</span></div>
+              <div class="field-desc">Tu nombre y apellido como administrador de la cuenta. Son dos campos separados.</div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">Email <span class="field-required">requerido</span></div>
+              <div class="field-desc">Usa un correo al que tengas acceso inmediato — recibirás el enlace de verificación en esta dirección.</div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">Contraseña <span class="field-required">requerido</span></div>
+              <div class="field-desc">Mínimo 8 caracteres, una mayúscula y un número.</div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">Confirmar contraseña <span class="field-required">requerido</span></div>
+              <div class="field-desc">Repite la contraseña para confirmar que no haya errores de escritura.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num-col">
+          <div class="step-badge">3</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-action">Haz clic en "Crear organización"</div>
+          <p class="step-detail">Al enviar el formulario, EventSync creará tu cuenta y tu organización simultáneamente. Verás de inmediato una pantalla de confirmación con el mensaje <strong>"¡Registro exitoso!"</strong> que indica que tu organización fue creada y que se ha enviado el correo de verificación.</p>
+          <div class="screenshot-wrap">
+            <img src="img/registro-exitoso.png" alt="Pantalla de registro exitoso" class="screenshot-img">
+            <div class="screenshot-caption">Confirmación de organización creada</div>
+          </div>
+          <div class="tip-box">
+            <strong>Siguiente paso:</strong> Haz clic en <strong>"Ir al login"</strong> o dirígete a tu bandeja de correo para completar la verificación antes de iniciar sesión.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SECCIÓN 2: VALIDACIÓN -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="guide-section">
+    <div class="guide-section-header">
+      <div class="guide-section-num">02</div>
+      <div class="guide-section-info">
+        <div class="guide-section-title">Validar tu correo electrónico</div>
+        <p class="guide-section-desc">
+          Después del registro, recibirás un correo automático de EventSync. Debes verificar
+          tu dirección para activar la cuenta y poder iniciar sesión.
+        </p>
+      </div>
+    </div>
+
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num-col">
+          <div class="step-badge">1</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-action">Busca el correo de verificación</div>
+          <p class="step-detail">Abre tu bandeja de entrada y busca un mensaje de <strong>noreply@notifications.eventsync.cloud</strong> con el asunto <strong>"Verifica tu cuenta en EventSync"</strong>. El correo llega en menos de 2 minutos.</p>
+          <div class="screenshot-wrap">
+            <img src="img/recibir-correo.png" alt="Correo de verificación de EventSync" class="screenshot-img">
+            <div class="screenshot-caption">Correo de verificación · noreply@notifications.eventsync.cloud</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num-col">
+          <div class="step-badge">2</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-action">Haz clic en "Verificar mi cuenta"</div>
+          <p class="step-detail">El correo dice: <em>"Para activar tu cuenta, verifica tu dirección de correo haciendo clic en el botón"</em>. Haz clic en el botón negro <strong>"Verificar mi cuenta"</strong> — esto abrirá EventSync en el navegador y activará tu cuenta automáticamente.</p>
+          <p class="step-detail" style="margin-top: 6px;">Si el botón no funciona, copia y pega en tu navegador el enlace que aparece debajo del botón. <strong>El enlace expira en 48 horas.</strong></p>
+          <div class="screenshot-wrap">
+            <img src="img/recibir-correo.png" alt='Botón "Verificar mi cuenta" en el correo' class="screenshot-img">
+            <div class="screenshot-caption">Botón "Verificar mi cuenta" en el correo de activación</div>
+          </div>
+          <div class="tip-box">
+            <strong>¿No llegó el correo?</strong> Revisa tu carpeta de <strong>Spam o Correo no deseado</strong>. Si después de 5 minutos sigue sin aparecer, puedes solicitar un reenvío desde la pantalla de inicio de sesión.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SECCIÓN 3: ACCESO A LA PLATAFORMA -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="guide-section">
+    <div class="guide-section-header">
+      <div class="guide-section-num">03</div>
+      <div class="guide-section-info">
+        <div class="guide-section-title">Iniciar sesión</div>
+        <p class="guide-section-desc">
+          Con tu cuenta verificada, ya puedes acceder al dashboard desde donde gestionarás
+          todos tus eventos, tu equipo y tus reportes.
+        </p>
+      </div>
+    </div>
+
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num-col">
+          <div class="step-badge">1</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-action">Ir a eventsync.cloud/login</div>
+          <p class="step-detail">Dirígete a <strong>eventsync.cloud/login</strong>. Verás el formulario <strong>"Iniciar sesión"</strong> con el subtítulo <em>"Ingresa con tu cuenta de organización"</em>. Escribe tu <strong>Email</strong> y <strong>Contraseña</strong> y haz clic en <strong>"Iniciar sesión"</strong>.</p>
+          <div class="screenshot-wrap">
+            <img src="img/login.png" alt="Pantalla de inicio de sesión" class="screenshot-img">
+            <div class="screenshot-caption">eventsync.cloud/login · Inicio de sesión</div>
+          </div>
+          <div class="tip-box">
+            <strong>¿Olvidaste tu contraseña?</strong> Haz clic en el enlace <strong>"¿Olvidaste tu contraseña?"</strong> que aparece junto al campo de contraseña para recibir un correo de recuperación.
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num-col">
+          <div class="step-badge">2</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-action">Explora el dashboard de tu organización</div>
+          <p class="step-detail">Al entrar, verás el panel principal con el saludo <em>"Hola, [tu nombre]"</em> y el subtítulo <em>"Resumen general de tu organización"</em>. El dashboard muestra cuatro métricas en tiempo real y el menú de navegación en el lado izquierdo:</p>
+          <div class="field-list">
+            <div class="field-row">
+              <div class="field-name">Dashboard</div>
+              <div class="field-desc">Resumen general: total de eventos, registros confirmados, check-ins y tasa de asistencia.</div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">Eventos</div>
+              <div class="field-desc">Lista completa de todos tus eventos — activos, borradores y pasados.</div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">Equipo</div>
+              <div class="field-desc">Gestión de los miembros de tu organización. Puedes invitar colaboradores desde aquí.</div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">Analytics</div>
+              <div class="field-desc">Estadísticas detalladas: registros por evento, fuentes de tráfico y tendencias.</div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">Configuración</div>
+              <div class="field-desc">Datos de tu organización, perfil de administrador y preferencias de la plataforma.</div>
+            </div>
+          </div>
+          <div class="screenshot-wrap">
+            <img src="img/dashboard-eventos.png" alt="Dashboard principal de EventSync" class="screenshot-img">
+            <div class="screenshot-caption">Dashboard principal · Resumen general de tu organización</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SECCIÓN 4: CREAR UN EVENTO -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="guide-section">
+    <div class="guide-section-header">
+      <div class="guide-section-num">04</div>
+      <div class="guide-section-info">
+        <div class="guide-section-title">Crear tu primer evento</div>
+        <p class="guide-section-desc">
+          El evento se crea primero como <strong>Borrador</strong> para que puedas revisarlo antes de publicarlo.
+          Una vez publicado, recibirás un enlace único para compartir con tus asistentes.
+        </p>
+      </div>
+    </div>
+
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num-col">
+          <div class="step-badge">1</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-action">Ve a Eventos y haz clic en "+ Nuevo evento"</div>
+          <p class="step-detail">En el menú lateral, haz clic en <strong>Eventos</strong>. Desde ahí verás el listado de tus eventos y el botón azul <strong>"+ Nuevo evento"</strong> en la esquina superior derecha. Haz clic en él para comenzar.</p>
+          <div class="screenshot-wrap">
+            <img src="img/nuevo-evento.png" alt="Sección de Eventos con botón Nuevo evento" class="screenshot-img">
+            <div class="screenshot-caption">Sección Eventos · "No tienes eventos aún"</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num-col">
+          <div class="step-badge">2</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-action">Llena la información del evento</div>
+          <p class="step-detail">Se abrirá el formulario <strong>"Nuevo evento"</strong> con la sección <em>"Información del evento"</em>. Completa los siguientes campos — podrás editar todo antes de publicar:</p>
+          <div class="field-list">
+            <div class="field-row">
+              <div class="field-name">Nombre del evento <span class="field-required">requerido</span></div>
+              <div class="field-desc">El título que verán tus asistentes (ej. <em>Conferencia Tech 2026</em>).</div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">Descripción</div>
+              <div class="field-desc">Explica de qué trata el evento para los asistentes.</div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">Fecha y hora de inicio <span class="field-required">requerido</span></div>
+              <div class="field-desc">Fecha y hora en que comienza el evento.</div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">Fecha y hora de fin <span class="field-required">requerido</span></div>
+              <div class="field-desc">Fecha y hora en que termina el evento.</div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">Modalidad <span class="field-required">requerido</span></div>
+              <div class="field-desc">Presencial, en línea o híbrido. Por defecto aparece <em>Presencial</em>.</div>
+            </div>
+          </div>
+          <div class="screenshot-wrap">
+            <img src="img/crear-nuevo-evento.png" alt="Formulario de nuevo evento" class="screenshot-img">
+            <div class="screenshot-caption">Formulario "Nuevo evento" · Se guarda como Borrador</div>
+          </div>
+          <div class="tip-box">
+            <strong>Nota:</strong> El evento se creará en estado <strong>Borrador</strong> automáticamente. Podrás publicarlo cuando estés listo, desde la vista de detalle del evento.
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num-col">
+          <div class="step-badge">3</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-action">Revisa los detalles y haz clic en "Publicado"</div>
+          <p class="step-detail">Al guardar el formulario, verás la página de detalle del evento con el estado <strong>Borrador</strong>. Aquí puedes revisar toda la información: fecha, lugar, modalidad, organizador, capacidad y registros disponibles. Cuando todo esté correcto, haz clic en el botón azul <strong>"Publicado ›"</strong> para publicar el evento.</p>
+          <div class="screenshot-wrap">
+            <img src="img/evento-creado.png" alt="Evento en estado Borrador" class="screenshot-img">
+            <div class="screenshot-caption">Detalle del evento · Estado Borrador — listo para publicar</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num-col">
+          <div class="step-badge">4</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-action">¡Evento publicado! Comparte el enlace</div>
+          <p class="step-detail">Una vez publicado, el estado cambia a <strong>Publicado</strong> (en verde) y aparece el enlace único de tu evento en la parte superior. Haz clic en <strong>"Copiar"</strong> para copiarlo y compartirlo con tus invitados por correo, WhatsApp o redes sociales.</p>
+          <p class="step-detail" style="margin-top: 6px;">Desde esta misma vista tienes acceso a <strong>Ver registros</strong>, <strong>Analytics</strong> y <strong>Check-in</strong> para gestionar el evento en tiempo real.</p>
+          <div class="screenshot-wrap">
+            <img src="img/evento-publicado.png" alt="Evento publicado con enlace" class="screenshot-img">
+            <div class="screenshot-caption">Evento publicado · Enlace activo y listo para compartir</div>
+          </div>
+          <div class="tip-box">
+            <strong>Consejo:</strong> Puedes editar el evento en cualquier momento usando el botón <strong>"Editar"</strong>. Los asistentes ya registrados recibirán un correo automático si hay cambios relevantes en fecha o lugar.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- RESUMEN FINAL -->
+  <div class="summary-block">
+    <div>
+      <div class="summary-title">Listo. Tu evento está en línea.</div>
+      <p class="summary-sub">Pasos completados en esta guía:</p>
+      <div class="summary-checklist">
+        <div class="summary-item">
+          <div class="check-circle">✓</div>
+          <span>Organización registrada en eventsync.cloud/register</span>
+        </div>
+        <div class="summary-item">
+          <div class="check-circle">✓</div>
+          <span>Cuenta verificada por correo electrónico</span>
+        </div>
+        <div class="summary-item">
+          <div class="check-circle">✓</div>
+          <span>Sesión iniciada en eventsync.cloud/login</span>
+        </div>
+        <div class="summary-item">
+          <div class="check-circle">✓</div>
+          <span>Evento publicado con página de registro activa</span>
+        </div>
+      </div>
+    </div>
+    <div class="summary-side">
+      <div class="summary-badge-label">Siguiente paso</div>
+      <div class="summary-badge">Check-In QR<br>el día del evento →</div>
+    </div>
+  </div>
+
+
+  <!-- FOOTER -->
+  <footer>
+    <div>
+      <span class="footer-brand">Catalysis</span> — Transformación Digital e IA
+    </div>
+    <div>
+      eventsync.cloud &nbsp;·&nbsp; catalysis.mx
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
