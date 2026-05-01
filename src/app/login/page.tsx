@@ -58,7 +58,13 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 relative">
+      <Link
+        href="/"
+        className="absolute top-4 left-4 sm:top-6 sm:left-6 text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+      >
+        ← Volver al sitio
+      </Link>
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-primary">EventSync</h1>
@@ -128,12 +134,9 @@ function LoginForm() {
           </CardContent>
 
           <CardFooter className="justify-center">
-            <p className="text-sm text-muted-foreground">
-              ¿No tienes cuenta?{' '}
-              <Link href="/register" className="text-primary hover:underline font-medium">
-                Registra tu organización
-              </Link>
-            </p>
+            <Link href="/register" className="text-sm text-primary hover:underline font-medium">
+              ¿Eres nuevo? Regístrate →
+            </Link>
           </CardFooter>
         </Card>
       </div>
