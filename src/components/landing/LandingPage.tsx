@@ -228,7 +228,7 @@ export function LandingPage() {
             EventSync vs el resto
           </div>
           <h2 className={styles.secH2}>
-            Eventbrite y Ticketopolis
+            Eventbrite y otras plataformas
             <br />
             no son tu herramienta.
           </h2>
@@ -239,7 +239,7 @@ export function LandingPage() {
 
           <div className={styles.diffCols}>
             <div className={`${styles.dcol} ${styles.them}`}>
-              <div className={`${styles.dcolHead} ${styles.them}`}>Eventbrite · Ticketopolis</div>
+              <div className={`${styles.dcolHead} ${styles.them}`}>Eventbrite y otras</div>
               <div className={styles.drow}>
                 <span className={styles.dx}>✗</span> Pensado para el público general (conciertos, teatro, circos)
               </div>
@@ -294,7 +294,6 @@ export function LandingPage() {
                 <tr>
                   <th>Característica</th>
                   <th>Eventbrite</th>
-                  <th>Ticketopolis</th>
                   <th>Hopin / Bizzabo</th>
                   <th className={styles.usCol}>EventSync</th>
                 </tr>
@@ -303,13 +302,11 @@ export function LandingPage() {
                 <tr>
                   <td>Objetivo principal</td>
                   <td>Venta de boletos</td>
-                  <td>Venta de boletos</td>
                   <td>Eventos virtuales</td>
                   <td className={styles.usCol}>Revenue ops · CRM sync</td>
                 </tr>
                 <tr>
                   <td>Integración CRM nativa</td>
-                  <td><span className={styles.ix}>✗</span></td>
                   <td><span className={styles.ix}>✗</span></td>
                   <td><span className={styles.ip}>Parcial</span></td>
                   <td className={styles.usCol}>
@@ -319,7 +316,6 @@ export function LandingPage() {
                 <tr>
                   <td>Check-in QR en tiempo real</td>
                   <td><span className={styles.ip}>Básico</span></td>
-                  <td><span className={styles.ip}>Básico</span></td>
                   <td><span className={styles.ix}>✗</span></td>
                   <td className={styles.usCol}>
                     <span className={styles.ic}>✓</span> Con analytics
@@ -328,13 +324,11 @@ export function LandingPage() {
                 <tr>
                   <td>Modelo de cobro</td>
                   <td>% por boleto</td>
-                  <td>% por boleto</td>
                   <td>$$ enterprise</td>
                   <td className={styles.usCol}>Suscripción plana</td>
                 </tr>
                 <tr>
                   <td>Multi-tenant / agencias</td>
-                  <td><span className={styles.ix}>✗</span></td>
                   <td><span className={styles.ix}>✗</span></td>
                   <td><span className={styles.ix}>✗</span></td>
                   <td className={styles.usCol}>
@@ -343,7 +337,6 @@ export function LandingPage() {
                 </tr>
                 <tr>
                   <td>IA generativa integrada</td>
-                  <td><span className={styles.ix}>✗</span></td>
                   <td><span className={styles.ix}>✗</span></td>
                   <td><span className={styles.ix}>✗</span></td>
                   <td className={styles.usCol}>
