@@ -275,6 +275,7 @@ TURNSTILE_SECRET_KEY=              # solo server-side
 - Scopes mínimos: `crm.objects.contacts.write`, `crm.objects.companies.write`, `crm.objects.associations.write`
 - Custom properties requeridas (crear en HubSpot antes de enviar el primer form):
   - Contact: `acuerdodeprivacidad` (boolean / single checkbox)
+  - Contact: `unidaddenegocio` (single-line text) — se inyecta server-side con valor fijo `Event-Sync`, no se expone en el form al cliente
   - Company: `crm_que_usas` (single-line text o dropdown)
 
 **Setup de Turnstile** (única vez):
@@ -381,7 +382,8 @@ La landing en `/` introdujo varios patrones nuevos al proyecto. Notas críticas:
 - Variables sin prefijo `NEXT_PUBLIC_` (`HUBSPOT_PRIVATE_APP_TOKEN`, `TURNSTILE_SECRET_KEY`) **nunca llegan al bundle del cliente** — solo las lee `route.ts` que corre en el server. Verificable con `grep -r "HUBSPOT_PRIVATE_APP_TOKEN" .next/static/` tras `npm run build`.
 
 **HubSpot custom properties**:
-- El form envía 2 propiedades custom (`acuerdodeprivacidad` en Contact, `crm_que_usas` en Company). **Deben existir en HubSpot antes del primer submit** o el endpoint devolverá 502 con `PROPERTY_DOESNT_EXIST`.
+- El form envía 3 propiedades custom (`acuerdodeprivacidad` y `unidaddenegocio` en Contact, `crm_que_usas` en Company). **Deben existir en HubSpot antes del primer submit** o el endpoint devolverá 502 con `PROPERTY_DOESNT_EXIST`.
+- `unidaddenegocio` se setea server-side como constante `BUSINESS_UNIT = 'Event-Sync'` en `route.ts` y **no forma parte de `RegisterPayload`** — esto es intencional: evita que un cliente manipule el valor desde DevTools, y deja el contrato del tipo explícito sobre qué campos viajan en el body. Si en el futuro otro producto comparte este endpoint, mover la constante a env var (`HUBSPOT_BUSINESS_UNIT`).
 - En 409 (contacto duplicado), el route continúa creando la empresa pero **omite la asociación** (no tenemos el `contactId` del contacto existente). El submit aparece exitoso al usuario pero solo se crea empresa nueva. Para upsert real, usar `/crm/objects/2026-03/contacts/batch/upsert` con `idProperty: 'email'`.
 - Logs server-side aparecen en Vercel → Deployments → Functions → `/api/hubspot/register` → Logs.
 
@@ -477,5 +479,5 @@ rm -rf .next
 
 ---
 
-**Última actualización**: 2026-04-30
-**Versión**: 1.2.0 — landing pública + integración HubSpot + Turnstile (FEAT-LANDING-01)
+**Última actualización**: 2026-05-02
+**Versión**: 1.2.1 — atribución `unidaddenegocio=Event-Sync` server-side en Contact de HubSpot

@@ -4,6 +4,11 @@ const HS_BASE = 'https://api.hubapi.com'
 const HS_TOKEN = process.env.HUBSPOT_PRIVATE_APP_TOKEN
 const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET_KEY
 
+// Atribución de unidad de negocio — se inyecta server-side en cada Contact
+// creado desde la landing de EventSync. Nunca se expone al cliente ni se acepta
+// en el payload del request (no está en RegisterPayload).
+const BUSINESS_UNIT = 'Event-Sync'
+
 function hsHeaders() {
   return {
     'Content-Type': 'application/json',
@@ -95,6 +100,7 @@ export async function POST(req: NextRequest) {
           email,
           hs_whatsapp_phone_number: phone,
           acuerdodeprivacidad: true,
+          unidaddenegocio: BUSINESS_UNIT,
           lifecyclestage: 'lead',
         },
       }),
